@@ -2,6 +2,8 @@ package com.playstore.ieee.ipact2019;
 
 import android.accounts.Account;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +23,7 @@ import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
+    SharedPreferences mSharedPreferences;
     private EditText mEditTextemail;
     private EditText mEditTextpass;
     private Button butt;
@@ -36,6 +39,7 @@ public class LoginActivity extends AppCompatActivity {
         mEditTextpass = findViewById (R.id.loginPassword);
         butt = findViewById (R.id.loginSign);
         api = ApiUtils.getUserService ();
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         butt.setOnClickListener (new View.OnClickListener () {
             @Override
@@ -57,8 +61,24 @@ public class LoginActivity extends AppCompatActivity {
            @Override
            public void onResponse(Call<Admin> call, Response<Admin> response) {
                Admin admin=response.body ();
+               try{
 
-               Log.d("ipactt",admin.getLogin_status ()+"  "+admin.getName ());
+
+               if(admin.getLogin_status ().equals ("1")){
+                   SharedPreferences.Editor editor = mSharedPreferences.edit();
+                   editor.putBoolean("status", false);
+                   if(admin.getType ().equals ("0"))editor.putBoolean ("Admin",false);
+                   else if(admin.getType ().equals ("1"))editor.putBoolean ("Admin",true);
+                   editor.apply();
+                   Log.d("ipactt","hi"+admin.getLogin_status ()+"  "+admin.getName ());
+                   Intent intent = new Intent (LoginActivity.this,Home.class);
+                   startActivity(intent);
+                   Toast.makeText (LoginActivity.this, "Hi "+admin.getName ()+" You are an Admin", Toast.LENGTH_SHORT).show ();
+               }}catch (NullPointerException e){
+                   Log.d("ipactt","Null Pointer");
+               }
+
+               Log.d("ipactt",admin.getLogin_status ()+" "+admin.getName ());
            }
 
            @Override
